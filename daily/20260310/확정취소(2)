@@ -1,0 +1,15 @@
+StringBuffer sql = new StringBuffer();
+
+sql.append("UPDATE H2 ");
+sql.append("   SET H2.ZAN_QTY = H2.ZAN_QTY + D.DEBIT_QTY ");
+sql.append("FROM TRN_NYU_ZAIKO_IO_HEADER H1 ");
+sql.append("INNER JOIN TRN_NYU_ZAIKO_IO_DETAIL D ");
+sql.append("        ON D.IO_NO      = H1.IO_NO ");
+sql.append("       AND D.IO_NO_EDA  = H1.IO_NO_EDA ");
+sql.append("       AND D.KAKUTEI_NO = H1.KAKUTEI_NO ");
+sql.append("INNER JOIN TRN_NYU_ZAIKO_IO_HEADER H2 ");
+sql.append("        ON H2.IO_NO     = D.MATCH_OUT_IO_NO ");
+sql.append("       AND H2.IO_NO_EDA = D.MATCH_OUT_IO_NO_EDA ");
+sql.append("       AND H2.IO_NO_DIV = D.MATCH_OUT_IO_NO_DIV ");
+sql.append("WHERE H1.KAKUTEI_NO = '").append(kakuteiNo).append("' ");
+sql.append("  AND H1.DELETE_FLG = '0' ");
