@@ -1,0 +1,131 @@
+package temp.abc.service;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.naming.NamingException;
+
+public class KakuteiService {
+
+    // TODO 공통 DAO
+    // private CommonDao commonDao;
+
+    public void execute(String a,
+                        String kakuteiNo,
+                        String kakuteiDate,
+                        String kakuteiTime,
+                        String updateDate,
+                        String updateTime,
+                        String updateUser) throws SQLException, NamingException {
+
+        // =====================================================
+        // 1. a 를 @ 로 split 해서 리스트에 넣기
+        // =====================================================
+        List<String> splitList = new ArrayList<String>();
+        if (a != null && !"".equals(a)) {
+            splitList = Arrays.asList(a.split("@"));
+        }
+
+        // TODO 필요하면 splitList 사용
+        // for (String unit : splitList) { ... }
+
+        // =====================================================
+        // 2. 확정대상데이터 취득
+        //    Kari:
+        //      NEW_FLG='1'
+        //      KAKUTEI_FLG='0'
+        //      IO_KBN='1'
+        //    ORDER BY:
+        //      NYUKO_DATE ASC, IO_NO ASC, IO_NO_EDA ASC
+        // =====================================================
+        StringBuffer selectSql = new StringBuffer();
+
+        selectSql.append("SELECT * ");
+        selectSql.append("  FROM TRN_NYU_ZAIKO_IO_KARI ");
+        selectSql.append(" WHERE NEW_FLG = '1' ");
+        selectSql.append("   AND KAKUTEI_FLG = '0' ");
+        selectSql.append("   AND IO_KBN = '1' ");
+        selectSql.append(" ORDER BY ");
+        selectSql.append("   NYUKO_DATE ASC ");
+        selectSql.append("  ,IO_NO ASC ");
+        selectSql.append("  ,IO_NO_EDA ASC ");
+
+        Map selectCondition = new HashMap();
+        selectCondition.put("sql", selectSql.toString());
+
+        // TODO DAO 호출
+        // List<Map> targetKariList = commonDao.selectData(selectCondition);
+        List<Map> targetKariList = new ArrayList<Map>();
+
+        // =====================================================
+        // 3. header 테이블에 데이터 등록
+        //    InsertToHeader 메서드는 이미 존재한다고 가정
+        // 4. kari 확정 플래그 갱신
+        //    update용 Map을 작성하여 DAO에 넣음
+        // =====================================================
+        for (Map kari : targetKariList) {
+
+            // -----------------------------------------------
+            // 3. Header 등록
+            // -----------------------------------------------
+            // TODO 이미 존재하는 메서드 호출
+            InsertToHeader(kari);
+
+            // -----------------------------------------------
+            // 4. Kari 확정 플래그 갱신용 Map 작성
+            //    db에서 가져와야 하는 값은 kari 맵에서 취득
+            // -----------------------------------------------
+            Map updateMap = new HashMap();
+
+            // PK / 검색조건용
+            updateMap.put("IO_NO", kari.get("IO_NO"));
+            updateMap.put("IO_NO_EDA", kari.get("IO_NO_EDA"));
+            updateMap.put("IO_NO_DIV", kari.get("IO_NO_DIV"));
+
+            // 갱신값
+            updateMap.put("KAKUTEI_FLG", "1");
+            updateMap.put("KAKUTEI_NO", kakuteiNo);
+            updateMap.put("KAKUTEI_DATE", kakuteiDate);
+            updateMap.put("KAKUTEI_TIME", kakuteiTime);
+
+            // Exclusive_cnt = exclusive_cnt + 1
+            // 공통 DAO가 Map을 받는 구조이므로
+            // 1) DAO에서 UCNT/EXCLUSIVE_CNT 증가 규칙을 갖고 있다면 그 규칙 사용
+            // 2) 아니면 현재값을 가져와 +1 해서 넣기
+            //
+            // 여기서는 현재값을 가져와 +1 해서 넣는 형태로 작성
+            Object exclusiveCntObj = kari.get("EXCLUSIVE_CNT");
+            int exclusiveCnt = 0;
+            if (exclusiveCntObj != null) {
+                exclusiveCnt = Integer.parseInt(String.valueOf(exclusiveCntObj));
+            }
+            updateMap.put("EXCLUSIVE_CNT", String.valueOf(exclusiveCnt + 1));
+
+            updateMap.put("UPDATE_DATE", updateDate);
+            updateMap.put("UPDATE_TIME", updateTime);
+            updateMap.put("UPDATE_USER", updateUser);
+
+            // TODO DAO update 호출
+            // 예:
+            // commonDao.updateData("TRN_NYU_ZAIKO_IO_KARI", updateMap);
+            // 또는
+            // kariDao.updateByPrimaryKey(updateMap);
+
+            updateKariKakutei(updateMap);
+        }
+    }
+
+    private void InsertToHeader(Map kari) throws SQLException, NamingException {
+        // TODO 이미 존재한다고 가정
+    }
+
+    private void updateKariKakutei(Map updateMap) throws SQLException, NamingException {
+        // TODO 공통 DAO 호출
+        // 예:
+        // commonDao.updateData(updateMap);
+    }
+}
