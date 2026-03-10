@@ -2,6 +2,10 @@ StringBuffer sql = new StringBuffer();
 
 sql.append("SELECT ");
 
+// ========================
+// N (전송입고)
+// ========================
+
 sql.append(" N.IO_NO AS N_IO_NO");
 sql.append(",N.IO_NO_EDA AS N_IO_NO_EDA");
 sql.append(",N.IO_NO_DIV AS N_IO_NO_DIV");
@@ -100,15 +104,114 @@ sql.append(",N.UPDATE_DATE AS N_UPDATE_DATE");
 sql.append(",N.UPDATE_TIME AS N_UPDATE_TIME");
 sql.append(",N.UPDATE_USER AS N_UPDATE_USER");
 
-sql.append(", S.* "); // 출고는 그대로 전체 가져오기 (간단화)
+// ========================
+// S (전송출고)
+// ========================
+
+sql.append(",S.IO_NO AS S_IO_NO");
+sql.append(",S.IO_NO_EDA AS S_IO_NO_EDA");
+sql.append(",S.IO_NO_DIV AS S_IO_NO_DIV");
+sql.append(",S.BUSYO_KBN AS S_BUSYO_KBN");
+sql.append(",S.JIGYO_KBN AS S_JIGYO_KBN");
+sql.append(",S.NEW_FLG AS S_NEW_FLG");
+sql.append(",S.AKAKURO_KBN AS S_AKAKURO_KBN");
+sql.append(",S.IO_KBN AS S_IO_KBN");
+sql.append(",S.IDO_KBN AS S_IDO_KBN");
+sql.append(",S.KAKUTEI_HORYU_FLG AS S_KAKUTEI_HORYU_FLG");
+sql.append(",S.KAKUTEI_FLG AS S_KAKUTEI_FLG");
+sql.append(",S.KAKUTEI_NO AS S_KAKUTEI_NO");
+sql.append(",S.KAKUTEI_DATE AS S_KAKUTEI_DATE");
+sql.append(",S.KAKUTEI_TIME AS S_KAKUTEI_TIME");
+sql.append(",S.KAKUTEI_USER AS S_KAKUTEI_USER");
+sql.append(",S.SEIKYU_NO AS S_SEIKYU_NO");
+sql.append(",S.SEIKYU_NO_EDA AS S_SEIKYU_NO_EDA");
+sql.append(",S.NONYU_DATE AS S_NONYU_DATE");
+sql.append(",S.KIHYO_DATE AS S_KIHYO_DATE");
+sql.append(",S.IO_YM AS S_IO_YM");
+sql.append(",S.SKS_CD AS S_SKS_CD");
+sql.append(",S.SKS_KJ AS S_SKS_KJ");
+sql.append(",S.SKS_RKJ AS S_SKS_RKJ");
+sql.append(",S.SKS_KN AS S_SKS_KN");
+sql.append(",S.HBS_CD AS S_HBS_CD");
+sql.append(",S.HBS_KJ AS S_HBS_KJ");
+sql.append(",S.HBS_RKJ AS S_HBS_RKJ");
+sql.append(",S.HBS_KN AS S_HBS_KN");
+sql.append(",S.NNS_CD AS S_NNS_CD");
+sql.append(",S.NNS_KJ AS S_NNS_KJ");
+sql.append(",S.NNS_RKJ AS S_NNS_RKJ");
+sql.append(",S.NNS_KN AS S_NNS_KN");
+sql.append(",S.HNM_CD AS S_HNM_CD");
+sql.append(",S.HNM_KJ AS S_HNM_KJ");
+sql.append(",S.HNM_RKJ AS S_HNM_RKJ");
+sql.append(",S.HNM_KN AS S_HNM_KN");
+sql.append(",S.BRD_CD AS S_BRD_CD");
+sql.append(",S.BRD_KJ AS S_BRD_KJ");
+sql.append(",S.BRD_KN AS S_BRD_KN");
+sql.append(",S.HOKAN_CD AS S_HOKAN_CD");
+sql.append(",S.HOKAN_KJ AS S_HOKAN_KJ");
+sql.append(",S.HOKAN_RKJ AS S_HOKAN_RKJ");
+sql.append(",S.HOKAN_KN AS S_HOKAN_KN");
+sql.append(",S.QTY AS S_QTY");
+sql.append(",S.TANI_KBN AS S_TANI_KBN");
+sql.append(",S.TANI_KJ AS S_TANI_KJ");
+sql.append(",S.JYURYO AS S_JYURYO");
+sql.append(",S.TEIKIYO AS S_TEIKIYO");
+sql.append(",S.BIKO AS S_BIKO");
+sql.append(",S.YUSO_TEHAI_KBN AS S_YUSO_TEHAI_KBN");
+sql.append(",S.KITAKU_IO_KBN AS S_KITAKU_IO_KBN");
+sql.append(",S.KITAKU_TORIHIKI_KEITAI_KBN AS S_KITAKU_TORIHIKI_KEITAI_KBN");
+sql.append(",S.ZAN_QTY AS S_ZAN_QTY");
+sql.append(",S.ZAN_JYURYO AS S_ZAN_JYURYO");
+sql.append(",S.UKE_TANKA AS S_UKE_TANKA");
+sql.append(",S.UKE_KINGAKU AS S_UKE_KINGAKU");
+sql.append(",S.NYUKO_DATE AS S_NYUKO_DATE");
+sql.append(",S.HOKAN_DATE AS S_HOKAN_DATE");
+sql.append(",S.NYUKORYO_FLG AS S_NYUKORYO_FLG");
+sql.append(",S.SHI_DATE AS S_SHI_DATE");
+sql.append(",S.SHI_SITE AS S_SHI_SITE");
+sql.append(",S.SYUKO_DATE AS S_SYUKO_DATE");
+sql.append(",S.HAN_TANKA AS S_HAN_TANKA");
+sql.append(",S.HAN_KINGAKU AS S_HAN_KINGAKU");
+sql.append(",S.HOKANRYO_FLG AS S_HOKANRYO_FLG");
+sql.append(",S.HOKAN_START_DATE AS S_HOKAN_START_DATE");
+sql.append(",S.KAI_DATE AS S_KAI_DATE");
+sql.append(",S.KAI_SITE AS S_KAI_SITE");
+sql.append(",S.SYUKO_FUTAN AS S_SYUKO_FUTAN");
+sql.append(",S.NIWATASI_PRINT_FLG AS S_NIWATASI_PRINT_FLG");
+sql.append(",S.NIWATASI_PRINT_DATE AS S_NIWATASI_PRINT_DATE");
+sql.append(",S.NIWATASI_PRINT_TIME AS S_NIWATASI_PRINT_TIME");
+sql.append(",S.NIWATASI_PRINT_USER AS S_NIWATASI_PRINT_USER");
+sql.append(",S.IDO_NO AS S_IDO_NO");
+sql.append(",S.IDO_NO_EDA AS S_IDO_NO_EDA");
+sql.append(",S.IDO_SEND_IO_NO AS S_IDO_SEND_IO_NO");
+sql.append(",S.IDO_SEND_IO_NO_EDA AS S_IDO_SEND_IO_NO_EDA");
+sql.append(",S.IDO_SEND_IO_NO_DIV AS S_IDO_SEND_IO_NO_DIV");
+sql.append(",S.IDO_RECV_IO_NO AS S_IDO_RECV_IO_NO");
+sql.append(",S.IDO_RECV_IO_NO_EDA AS S_IDO_RECV_IO_NO_EDA");
+sql.append(",S.IDO_RECV_IO_NO_DIV AS S_IDO_RECV_IO_NO_DIV");
+sql.append(",S.UNCHIN_TANKA AS S_UNCHIN_TANKA");
+sql.append(",S.UNCHIN AS S_UNCHIN");
+sql.append(",S.NYUKO_TANKA AS S_NYUKO_TANKA");
+sql.append(",S.NYUKO_RYO AS S_NYUKO_RYO");
+sql.append(",S.SYOGAKARI_KINGAKU AS S_SYOGAKARI_KINGAKU");
+sql.append(",S.HYOKA_TANKA AS S_HYOKA_TANKA");
+sql.append(",S.HYOKA_KINGAKU AS S_HYOKA_KINGAKU");
+sql.append(",S.FURI_KIN AS S_FURI_KIN");
+sql.append(",S.EXCLUSIVE_CNT AS S_EXCLUSIVE_CNT");
+sql.append(",S.DELETE_FLG AS S_DELETE_FLG");
+sql.append(",S.INSERT_DATE AS S_INSERT_DATE");
+sql.append(",S.INSERT_TIME AS S_INSERT_TIME");
+sql.append(",S.INSERT_USER AS S_INSERT_USER");
+sql.append(",S.UPDATE_DATE AS S_UPDATE_DATE");
+sql.append(",S.UPDATE_TIME AS S_UPDATE_TIME");
+sql.append(",S.UPDATE_USER AS S_UPDATE_USER");
 
 sql.append(" FROM TRN_NYU_ZAIKO_IO_KARI N ");
 sql.append(" INNER JOIN TRN_NYU_ZAIKO_IO_KARI S ");
 sql.append(" ON S.IDO_NO = N.IDO_NO ");
 sql.append(" AND S.IDO_NO_EDA = N.IDO_NO_EDA ");
 
-sql.append(" WHERE 1=1 ");
-sql.append(" AND N.NEW_FLG = '1'");
+sql.append(" WHERE N.NEW_FLG = '1'");
 sql.append(" AND N.KAKUTEI_FLG = '0'");
 sql.append(" AND N.IO_KBN = '1'");
 sql.append(" AND N.IDO_KBN <> '0'");
