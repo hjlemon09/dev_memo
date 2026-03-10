@@ -1,353 +1,157 @@
-package temp.abc.service;
+// ========================================
+// 1. 전송 데이터 취득
+// ========================================
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+List<Map<String,Object>> tensoPairList = commonDao.selectData(sql.toString());
 
-public class TensoKakuteiService {
+for(Map<String,Object> tensoPair : tensoPairList){
 
-    private static final String INSERT_USER = "testUs";
+    // ===============================
+    // 전송출고 데이터
+    // ===============================
 
-    // TODO 공통 DAO
-    // private CommonDao commonDao;
+    String jigyoKbn = (String)tensoPair.get("JIGYO_KBN");
+    String hnmCd = (String)tensoPair.get("HNM_CD");
+    String brdCd = (String)tensoPair.get("BRD_CD");
+    String syukoDate = (String)tensoPair.get("SYUKO_DATE");
 
-    public void execute(String targetYm) throws Exception {
+    BigDecimal nowSyukoQty = (BigDecimal)tensoPair.get("QTY");
 
-        // =====================================================
-        // 1. 미확정 전송데이터(입고+출고 페어) 취득
-        //    ※ SQL 결과 1행 = 입고/출고 1페어
-        // =====================================================
-        StringBuffer tensoPairSql = new StringBuffer();
-        tensoPairSql.append("SELECT ");
-        tensoPairSql.append(" N.IO_NO           AS N_IO_NO ");
-        tensoPairSql.append(",N.IO_NO_EDA       AS N_IO_NO_EDA ");
-        tensoPairSql.append(",N.IO_NO_DIV       AS N_IO_NO_DIV ");
-        tensoPairSql.append(",N.BUSYO_KBN       AS N_BUSYO_KBN ");
-        tensoPairSql.append(",N.JIGYO_KBN       AS N_JIGYO_KBN ");
-        tensoPairSql.append(",N.NEW_FLG         AS N_NEW_FLG ");
-        tensoPairSql.append(",N.IO_KBN          AS N_IO_KBN ");
-        tensoPairSql.append(",N.IDO_KBN         AS N_IDO_KBN ");
-        tensoPairSql.append(",N.KAKUTEI_FLG     AS N_KAKUTEI_FLG ");
-        tensoPairSql.append(",N.KAKUTEI_NO      AS N_KAKUTEI_NO ");
-        tensoPairSql.append(",N.KAKUTEI_DATE    AS N_KAKUTEI_DATE ");
-        tensoPairSql.append(",N.KAKUTEI_TIME    AS N_KAKUTEI_TIME ");
-        tensoPairSql.append(",N.KAKUTEI_USER    AS N_KAKUTEI_USER ");
-        tensoPairSql.append(",N.NYUKO_DATE      AS N_NYUKO_DATE ");
-        tensoPairSql.append(",N.SYUKO_DATE      AS N_SYUKO_DATE ");
-        tensoPairSql.append(",N.HNM_CD          AS N_HNM_CD ");
-        tensoPairSql.append(",N.BRD_CD          AS N_BRD_CD ");
-        tensoPairSql.append(",N.QTY             AS N_QTY ");
-        tensoPairSql.append(",N.IDO_NO          AS N_IDO_NO ");
-        tensoPairSql.append(",N.IDO_NO_EDA      AS N_IDO_NO_EDA ");
-        tensoPairSql.append(",S.IO_NO           AS S_IO_NO ");
-        tensoPairSql.append(",S.IO_NO_EDA       AS S_IO_NO_EDA ");
-        tensoPairSql.append(",S.IO_NO_DIV       AS S_IO_NO_DIV ");
-        tensoPairSql.append(",S.BUSYO_KBN       AS S_BUSYO_KBN ");
-        tensoPairSql.append(",S.JIGYO_KBN       AS S_JIGYO_KBN ");
-        tensoPairSql.append(",S.NEW_FLG         AS S_NEW_FLG ");
-        tensoPairSql.append(",S.IO_KBN          AS S_IO_KBN ");
-        tensoPairSql.append(",S.IDO_KBN         AS S_IDO_KBN ");
-        tensoPairSql.append(",S.KAKUTEI_FLG     AS S_KAKUTEI_FLG ");
-        tensoPairSql.append(",S.KAKUTEI_NO      AS S_KAKUTEI_NO ");
-        tensoPairSql.append(",S.KAKUTEI_DATE    AS S_KAKUTEI_DATE ");
-        tensoPairSql.append(",S.KAKUTEI_TIME    AS S_KAKUTEI_TIME ");
-        tensoPairSql.append(",S.KAKUTEI_USER    AS S_KAKUTEI_USER ");
-        tensoPairSql.append(",S.NYUKO_DATE      AS S_NYUKO_DATE ");
-        tensoPairSql.append(",S.SYUKO_DATE      AS S_SYUKO_DATE ");
-        tensoPairSql.append(",S.HNM_CD          AS S_HNM_CD ");
-        tensoPairSql.append(",S.BRD_CD          AS S_BRD_CD ");
-        tensoPairSql.append(",S.QTY             AS S_QTY ");
-        tensoPairSql.append(",S.IDO_NO          AS S_IDO_NO ");
-        tensoPairSql.append(",S.IDO_NO_EDA      AS S_IDO_NO_EDA ");
-        tensoPairSql.append("FROM TRN_NYU_ZAIKO_IO_KARI N ");
-        tensoPairSql.append("INNER JOIN TRN_NYU_ZAIKO_IO_KARI S ");
-        tensoPairSql.append("        ON S.IDO_NO     = N.IDO_NO ");
-        tensoPairSql.append("       AND S.IDO_NO_EDA = N.IDO_NO_EDA ");
-        tensoPairSql.append("WHERE N.NEW_FLG = '1' ");
-        tensoPairSql.append("  AND N.KAKUTEI_FLG = '0' ");
-        tensoPairSql.append("  AND N.IO_KBN = '1' ");
-        tensoPairSql.append("  AND N.IDO_KBN <> '0' ");
-        tensoPairSql.append("  AND SUBSTRING(N.NYUKO_DATE, 1, 6) = '").append(targetYm).append("' ");
-        tensoPairSql.append("  AND S.NEW_FLG = '1' ");
-        tensoPairSql.append("  AND S.IO_KBN = '2' ");
-        tensoPairSql.append("  AND SUBSTRING(S.SYUKO_DATE, 1, 6) = '").append(targetYm).append("' ");
-        tensoPairSql.append("ORDER BY ");
-        tensoPairSql.append(" S.SYUKO_DATE ASC ");
-        tensoPairSql.append(",S.IO_NO ASC ");
-        tensoPairSql.append(",S.IO_NO_EDA ASC ");
+    // =====================================
+    // 2-1 relatedNyukoList 취득 SQL
+    // =====================================
 
-        Map tensoPairCondition = new HashMap();
-        tensoPairCondition.put("sql", tensoPairSql.toString());
+    StringBuffer relatedSql = new StringBuffer();
 
-        // TODO DAO 호출
-        // List<Map> tensoPairList = commonDao.selectMany(tensoPairCondition);
-        List<Map> tensoPairList = new ArrayList<Map>();
+    relatedSql.append("SELECT * ");
+    relatedSql.append(" FROM TRN_NYU_ZAIKO_IO_HEADER ");
+    relatedSql.append(" WHERE 1=1 ");
 
-        if (tensoPairList == null || tensoPairList.isEmpty()) {
-            return;
+    relatedSql.append(" AND JIGYO_KBN = '").append(jigyoKbn).append("' ");
+    relatedSql.append(" AND HNM_CD = '").append(hnmCd).append("' ");
+    relatedSql.append(" AND BRD_CD = '").append(brdCd).append("' ");
+
+    relatedSql.append(" AND NYUKO_DATE <= '").append(syukoDate).append("' ");
+
+    relatedSql.append(" AND ZAN_QTY <> 0 ");
+    relatedSql.append(" AND IO_KBN = '1' ");
+    relatedSql.append(" AND NEW_FLG = '1' ");
+    relatedSql.append(" AND DELETE_FLG = '0' ");
+
+    relatedSql.append(" ORDER BY ");
+    relatedSql.append(" NYUKO_DATE ASC ");
+    relatedSql.append(",IO_NO ASC ");
+    relatedSql.append(",IO_NO_EDA ASC ");
+
+    List<Map<String,Object>> relatedNyukoList =
+            commonDao.selectData(relatedSql.toString());
+
+
+    // ====================================
+    // relatedNyukoList 존재 체크
+    // ====================================
+
+    if(relatedNyukoList == null || relatedNyukoList.size() == 0){
+        throw new RuntimeException("relatedNyukoList not found");
+    }
+
+
+    // ====================================
+    // io_no_div 생성용 카운터
+    // ====================================
+
+    int divSeq = 0;
+
+
+    // ====================================
+    // relatedNyuko 처리 루프
+    // ====================================
+
+    for(Map<String,Object> relatedNyuko : relatedNyukoList){
+
+        // io_no_div
+        String ioNoDiv = String.format("%02d", divSeq);
+        divSeq++;
+
+
+        // =================================
+        // (1) 전송출고 header 등록
+        // =================================
+
+        // 필요한 컬럼은 tensoPair에서 그대로 사용
+        // insert SQL은 구현자가 작성
+
+        insertHeaderData(tensoPair, ioNoDiv);
+
+
+        // =================================
+        // DB잔량 (Map 오염 금지)
+        // =================================
+
+        BigDecimal dbZanQty =
+                (BigDecimal)relatedNyuko.get("ZAN_QTY");
+
+        BigDecimal result =
+                dbZanQty.subtract(nowSyukoQty);
+
+
+        // =================================
+        // (a) 잔량이 충분한 경우
+        // =================================
+
+        if(result.compareTo(BigDecimal.ZERO) >= 0){
+
+            BigDecimal newZanQty =
+                    dbZanQty.subtract(nowSyukoQty);
+
+
+            updateZanQty(
+                    relatedNyuko,
+                    newZanQty
+            );
+
+
+            insertNyukoDetail();
+            insertSyukoDetail();
+
+
+            nowSyukoQty = BigDecimal.ZERO;
+
+            break;
         }
 
-        // =====================================================
-        // 2. 전송출고/전송입고 페어 반복
-        // =====================================================
-        for (Map tensoPair : tensoPairList) {
 
-            String syukoIoNo = getString(tensoPair, "S_IO_NO");
-            String syukoIoNoEda = getString(tensoPair, "S_IO_NO_EDA");
-            String idoNo = getString(tensoPair, "S_IDO_NO");
-            String idoNoEda = getString(tensoPair, "S_IDO_NO_EDA");
+        // =================================
+        // (b) 잔량 부족
+        // =================================
 
-            BigDecimal nowSyukoQty = getBigDecimal(tensoPair, "S_QTY");
+        else{
 
-            // =================================================
-            // 2-1. 전송출고데이터와 관련 있는 입고데이터 리스트 취득
-            // =================================================
-            StringBuffer relatedNyukoSql = new StringBuffer();
-            relatedNyukoSql.append("SELECT ");
-            relatedNyukoSql.append(" H.IO_NO ");
-            relatedNyukoSql.append(",H.IO_NO_EDA ");
-            relatedNyukoSql.append(",H.IO_NO_DIV ");
-            relatedNyukoSql.append(",H.JIGYO_KBN ");
-            relatedNyukoSql.append(",H.HNM_CD ");
-            relatedNyukoSql.append(",H.BRD_CD ");
-            relatedNyukoSql.append(",H.NYUKO_DATE ");
-            relatedNyukoSql.append(",H.QTY ");
-            relatedNyukoSql.append(",H.ZAN_QTY ");
-            relatedNyukoSql.append("FROM TRN_NYU_ZAIKO_IO_HEADER H ");
-            relatedNyukoSql.append("WHERE 1=1 ");
-            relatedNyukoSql.append("AND H.JIGYO_KBN = '").append(getString(tensoPair, "S_JIGYO_KBN")).append("' ");
-            relatedNyukoSql.append("AND H.HNM_CD = '").append(getString(tensoPair, "S_HNM_CD")).append("' ");
-            relatedNyukoSql.append("AND H.BRD_CD = '").append(getString(tensoPair, "S_BRD_CD")).append("' ");
-            relatedNyukoSql.append("AND H.NYUKO_DATE <= '").append(getString(tensoPair, "S_SYUKO_DATE")).append("' ");
-            relatedNyukoSql.append("AND H.ZAN_QTY <> 0 ");
-            relatedNyukoSql.append("AND H.IO_KBN = '1' ");
-            relatedNyukoSql.append("AND H.NEW_FLG = '1' ");
-            relatedNyukoSql.append("AND H.DELETE_FLG = '0' ");
-            relatedNyukoSql.append("ORDER BY ");
-            relatedNyukoSql.append(" H.NYUKO_DATE ASC ");
-            relatedNyukoSql.append(",H.IO_NO ASC ");
-            relatedNyukoSql.append(",H.IO_NO_EDA ASC ");
+            updateZanQty(
+                    relatedNyuko,
+                    BigDecimal.ZERO
+            );
 
-            Map relatedNyukoCondition = new HashMap();
-            relatedNyukoCondition.put("sql", relatedNyukoSql.toString());
+            insertNyukoDetail();
+            insertSyukoDetail();
 
-            // TODO DAO 호출
-            // List<Map> relatedNyukoList = commonDao.selectMany(relatedNyukoCondition);
-            List<Map> relatedNyukoList = new ArrayList<Map>();
 
-            if (relatedNyukoList == null || relatedNyukoList.isEmpty()) {
-                throw new Exception(
-                    "relatedNyukoList is empty."
-                    + " idoNo=" + idoNo
-                    + ", idoNoEda=" + idoNoEda
-                    + ", ioNo=" + syukoIoNo
-                    + ", ioNoEda=" + syukoIoNoEda
-                );
-            }
+            nowSyukoQty =
+                    nowSyukoQty.subtract(dbZanQty);
 
-            int ioNoDivSeq = 0;
-            boolean completed = false;
 
-            // =================================================
-            // relatedNyukoList 반복
-            // =================================================
-            for (Map relatedNyuko : relatedNyukoList) {
-
-                // ---------------------------------------------
-                // (1) 전송출고데이터를 header테이블에 등록
-                // ---------------------------------------------
-                Map newSyukoHeader = new HashMap();
-
-                // TODO tensoPair의 출고데이터와 같은 칼럼 복사
-                newSyukoHeader.put("IO_NO", getString(tensoPair, "S_IO_NO"));
-                newSyukoHeader.put("IO_NO_EDA", getString(tensoPair, "S_IO_NO_EDA"));
-                newSyukoHeader.put("IO_NO_DIV", formatIoNoDiv(ioNoDivSeq));
-
-                newSyukoHeader.put("BUSYO_KBN", getString(tensoPair, "S_BUSYO_KBN"));
-                newSyukoHeader.put("JIGYO_KBN", getString(tensoPair, "S_JIGYO_KBN"));
-                newSyukoHeader.put("NEW_FLG", getString(tensoPair, "S_NEW_FLG"));
-                newSyukoHeader.put("IO_KBN", getString(tensoPair, "S_IO_KBN"));
-                newSyukoHeader.put("IDO_KBN", getString(tensoPair, "S_IDO_KBN"));
-                newSyukoHeader.put("KAKUTEI_FLG", getString(tensoPair, "S_KAKUTEI_FLG"));
-                newSyukoHeader.put("KAKUTEI_NO", getString(tensoPair, "S_KAKUTEI_NO"));
-                newSyukoHeader.put("KAKUTEI_DATE", getString(tensoPair, "S_KAKUTEI_DATE"));
-                newSyukoHeader.put("KAKUTEI_TIME", getString(tensoPair, "S_KAKUTEI_TIME"));
-                newSyukoHeader.put("KAKUTEI_USER", getString(tensoPair, "S_KAKUTEI_USER"));
-                newSyukoHeader.put("NYUKO_DATE", getString(tensoPair, "S_NYUKO_DATE"));
-                newSyukoHeader.put("SYUKO_DATE", getString(tensoPair, "S_SYUKO_DATE"));
-                newSyukoHeader.put("HNM_CD", getString(tensoPair, "S_HNM_CD"));
-                newSyukoHeader.put("BRD_CD", getString(tensoPair, "S_BRD_CD"));
-                newSyukoHeader.put("QTY", getBigDecimal(tensoPair, "S_QTY"));
-                newSyukoHeader.put("IDO_NO", getString(tensoPair, "S_IDO_NO"));
-                newSyukoHeader.put("IDO_NO_EDA", getString(tensoPair, "S_IDO_NO_EDA"));
-
-                newSyukoHeader.put("EXCLUSIVE_CNT", new Integer(0));
-                newSyukoHeader.put("INSERT_DATE", currentDate());
-                newSyukoHeader.put("INSERT_TIME", currentTime());
-                newSyukoHeader.put("INSERT_USER", INSERT_USER);
-
-                // TODO 필요한 나머지 컬럼도 복사
-                insertDataHeader(newSyukoHeader);
-
-                // ---------------------------------------------
-                // (2) relatedNyuko의 zan_qty 갱신과 detail 등록
-                // ---------------------------------------------
-                BigDecimal beforeZanQty = getBigDecimal(relatedNyuko, "ZAN_QTY");
-                BigDecimal calc = beforeZanQty.subtract(nowSyukoQty);
-
-                // =================================================
-                // (a) 0 <= relatedNyuko.zan_qty - nowSyukoQty
-                // =================================================
-                if (calc.compareTo(BigDecimal.ZERO) >= 0) {
-
-                    BigDecimal hikiotoshiQty = nowSyukoQty;
-                    BigDecimal updatedZanQty = beforeZanQty.subtract(hikiotoshiQty);
-
-                    relatedNyuko.put("ZAN_QTY", updatedZanQty);
-
-                    // TODO header zan_qty 갱신
-                    updateDataHeaderZanQty(relatedNyuko);
-
-                    // TODO detail 등록
-                    // 가. 입고引落등록
-                    insertNyukoHikiotoshiDetail(
-                            relatedNyuko,
-                            newSyukoHeader,
-                            tensoPair,
-                            hikiotoshiQty
-                    );
-
-                    // 나. 출고引落등록
-                    insertSyukoHikiotoshiDetail(
-                            relatedNyuko,
-                            newSyukoHeader,
-                            tensoPair,
-                            hikiotoshiQty
-                    );
-
-                    nowSyukoQty = BigDecimal.ZERO;
-                    completed = true;
-                    break;
-                }
-
-                // =================================================
-                // (b) 0 > relatedNyuko.zan_qty - nowSyukoQty
-                // =================================================
-                else {
-
-                    // 중요:
-                    // 0으로 바꾸기 전에 기존 zan_qty를 보관
-                    BigDecimal hikiotoshiQty = beforeZanQty;
-
-                    relatedNyuko.put("ZAN_QTY", BigDecimal.ZERO);
-
-                    // TODO header zan_qty 갱신
-                    updateDataHeaderZanQty(relatedNyuko);
-
-                    // TODO detail 등록
-                    // 가. 입고引落등록
-                    insertNyukoHikiotoshiDetail(
-                            relatedNyuko,
-                            newSyukoHeader,
-                            tensoPair,
-                            hikiotoshiQty
-                    );
-
-                    // 나. 출고引落등록
-                    insertSyukoHikiotoshiDetail(
-                            relatedNyuko,
-                            newSyukoHeader,
-                            tensoPair,
-                            hikiotoshiQty
-                    );
-
-                    // 남은 출고수량 차감
-                    nowSyukoQty = nowSyukoQty.subtract(hikiotoshiQty);
-
-                    ioNoDivSeq++;
-                    continue;
-                }
-            }
-
-            // =================================================
-            // relatedNyukoList가 다 끝났는데도 (a) 종료 못했으면 에러
-            // =================================================
-            if (!completed || nowSyukoQty.compareTo(BigDecimal.ZERO) > 0) {
-                throw new Exception(
-                    "Syuko qty not fully processed. remainQty=" + nowSyukoQty
-                    + ", idoNo=" + idoNo
-                    + ", idoNoEda=" + idoNoEda
-                    + ", ioNo=" + syukoIoNo
-                    + ", ioNoEda=" + syukoIoNoEda
-                );
-            }
+            continue;
         }
+
     }
 
-    // =========================================================
-    // 등록/갱신 메서드 틀
-    // =========================================================
-    private void insertDataHeader(Map newSyukoHeader) {
-        // TODO DAO insert 호출
-        // commonDao.insertDataHeader(newSyukoHeader);
+
+    // ======================================
+    // 루프 종료 후 잔량 존재 = 오류
+    // ======================================
+
+    if(nowSyukoQty.compareTo(BigDecimal.ZERO) > 0){
+        throw new RuntimeException("stock shortage error");
     }
 
-    private void updateDataHeaderZanQty(Map relatedNyuko) {
-        // TODO DAO update 호출
-        // commonDao.updateDataHeaderZanQty(relatedNyuko);
-    }
-
-    private void insertNyukoHikiotoshiDetail(
-            Map relatedNyuko,
-            Map newSyukoHeader,
-            Map tensoPair,
-            BigDecimal hikiotoshiQty) {
-        // TODO 빈 메서드
-    }
-
-    private void insertSyukoHikiotoshiDetail(
-            Map relatedNyuko,
-            Map newSyukoHeader,
-            Map tensoPair,
-            BigDecimal hikiotoshiQty) {
-        // TODO 빈 메서드
-    }
-
-    // =========================================================
-    // Utility
-    // =========================================================
-    private String getString(Map map, String key) {
-        Object value = map.get(key);
-        return value == null ? "" : String.valueOf(value);
-    }
-
-    private BigDecimal getBigDecimal(Map map, String key) {
-        Object value = map.get(key);
-        if (value == null) {
-            return BigDecimal.ZERO;
-        }
-        if (value instanceof BigDecimal) {
-            return (BigDecimal) value;
-        }
-        return new BigDecimal(String.valueOf(value));
-    }
-
-    private String formatIoNoDiv(int seq) throws Exception {
-        if (seq < 0 || seq > 99) {
-            throw new Exception("IO_NO_DIV overflow. seq=" + seq);
-        }
-        return String.format("%02d", seq);
-    }
-
-    private String currentDate() {
-        // TODO yyyyMMdd
-        return "20260310";
-    }
-
-    private String currentTime() {
-        // TODO HHmmss
-        return "120000";
-    }
 }
