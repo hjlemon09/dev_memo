@@ -1,0 +1,82 @@
+package temp.abc.service;
+
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.naming.NamingException;
+
+public class ZaikoIoDeleteService {
+
+    // TODO 공통 DAO로 교체
+    // private CommonDao commonDao;
+
+    /**
+     * Header / Detail 논리삭제
+     */
+    public void logicalDeleteByKakuteiNo(String kakuteiNo,
+                                         String updateDate,
+                                         String updateTime,
+                                         String updateUser) throws SQLException, NamingException {
+
+        // ============================================
+        // 1,2. Header 논리삭제
+        // ============================================
+        StringBuffer headerSql = new StringBuffer();
+
+        headerSql.append("UPDATE TRN_NYU_ZAIKO_IO_HEADER ");
+        headerSql.append("   SET EXCLUSIVE_CNT = ISNULL(EXCLUSIVE_CNT, 0) + 1 ");
+        headerSql.append("      ,DELETE_FLG    = '1' ");
+        headerSql.append("      ,UPDATE_DATE   = '").append(updateDate).append("' ");
+        headerSql.append("      ,UPDATE_TIME   = '").append(updateTime).append("' ");
+        headerSql.append("      ,UPDATE_USER   = '").append(updateUser).append("' ");
+        headerSql.append(" WHERE KAKUTEI_NO = '").append(kakuteiNo).append("' ");
+        headerSql.append("   AND DELETE_FLG = '0' ");
+
+        // TODO DAO update 호출
+        // commonDao.updateData(createConditionMap(headerSql.toString()));
+        executeUpdate(headerSql.toString());
+
+        // ============================================
+        // 3,4. Detail 논리삭제
+        //    2에서 갱신된 Header를 기준으로 Detail 갱신
+        // ============================================
+        StringBuffer detailSql = new StringBuffer();
+
+        detailSql.append("UPDATE D ");
+        detailSql.append("   SET D.EXCLUSIVE_CNT = ISNULL(D.EXCLUSIVE_CNT, 0) + 1 ");
+        detailSql.append("      ,D.DELETE_FLG    = '1' ");
+        detailSql.append("      ,D.UPDATE_DATE   = '").append(updateDate).append("' ");
+        detailSql.append("      ,D.UPDATE_TIME   = '").append(updateTime).append("' ");
+        detailSql.append("      ,D.UPDATE_USER   = '").append(updateUser).append("' ");
+        detailSql.append("  FROM TRN_NYU_ZAIKO_IO_DETAIL D ");
+        detailSql.append(" INNER JOIN TRN_NYU_ZAIKO_IO_HEADER H ");
+        detailSql.append("         ON D.IO_NO      = H.IO_NO ");
+        detailSql.append("        AND D.IO_NO_EDA  = H.IO_NO_EDA ");
+        detailSql.append("        AND D.KAKUTEI_NO = H.KAKUTEI_NO ");
+        detailSql.append(" WHERE H.KAKUTEI_NO = '").append(kakuteiNo).append("' ");
+        detailSql.append("   AND H.DELETE_FLG = '1' ");
+
+        // TODO DAO update 호출
+        // commonDao.updateData(createConditionMap(detailSql.toString()));
+        executeUpdate(detailSql.toString());
+    }
+
+    /**
+     * 공통 DAO 조건 Map 예시
+     */
+    private Map createConditionMap(String sql) {
+        Map condition = new HashMap();
+        condition.put("sql", sql);
+        return condition;
+    }
+
+    /**
+     * TODO 실제 공통 DAO 호출로 교체
+     */
+    private void executeUpdate(String sql) throws SQLException, NamingException {
+        // 예:
+        // commonDao.updateData(createConditionMap(sql));
+        System.out.println(sql);
+    }
+}
