@@ -1,0 +1,140 @@
+package temp.abc.service;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+public class TensoKakuteiService {
+
+    private static final String INSERT_USER = "testUs";
+
+    public void execute(String targetYm) throws Exception {
+
+        // SQL:
+        // SELECT N.*, S.*
+        // FROM TRN_NYU_ZAIKO_IO_KARI N
+        // INNER JOIN TRN_NYU_ZAIKO_IO_KARI S
+        //   ON S.IDO_NO = N.IDO_NO
+        //  AND S.IDO_NO_EDA = N.IDO_NO_EDA
+        // WHERE N.NEW_FLG = '1'
+        //   AND N.KAKUTEI_FLG = '0'
+        //   AND N.IO_KBN = '1'
+        //   AND N.IDO_KBN <> '0'
+        //   AND SUBSTRING(N.NYUKO_DATE, 1, 6) = ?
+        //   AND S.NEW_FLG = '1'
+        //   AND S.IO_KBN = '2'
+        //   AND SUBSTRING(S.SYUKO_DATE, 1, 6) = ?
+        // ORDER BY S.SYUKO_DATE ASC, S.IO_NO ASC, S.IO_NO_EDA ASC
+        List<TensoPair> tensoPairList = null; // TODO DAO 호출
+
+        if (tensoPairList == null || tensoPairList.isEmpty()) {
+            return;
+        }
+
+        for (TensoPair tensoPair : tensoPairList) {
+
+            TrnNyuZaikoIoKari tensoSyuko = tensoPair.syukoData;
+            TrnNyuZaikoIoKari tensoNyuko = tensoPair.nyukoData; // 必要なら使用
+
+            // SQL:
+            // SELECT *
+            // FROM TRN_NYU_ZAIKO_IO_HEADER
+            // WHERE JIGYO_KBN = ?
+            //   AND HNM_CD = ?
+            //   AND BRD_CD = ?
+            //   AND NYUKO_DATE <= ?
+            //   AND ZAN_QTY <> 0
+            //   AND IO_KBN = '1'
+            //   AND NEW_FLG = '1'
+            //   AND DELETE_FLG = '0'
+            // ORDER BY NYUKO_DATE ASC, IO_NO ASC, IO_NO_EDA ASC
+            List<TrnNyuZaikoIoHeader> relatedNyukoList = null; // TODO DAO 호출
+
+            if (relatedNyukoList == null || relatedNyukoList.isEmpty()) {
+                throw new Exception("relatedNyukoList is empty. idoNo=" + tensoSyuko.idoNo
+                        + ", idoNoEda=" + tensoSyuko.idoNoEda);
+            }
+
+            BigDecimal nowSyukoQty = tensoSyuko.qty == null ? BigDecimal.ZERO : tensoSyuko.qty;
+            int ioNoDivSeq = 0;
+            boolean completed = false;
+
+            for (TrnNyuZaikoIoHeader relatedNyuko : relatedNyukoList) {
+
+                TrnNyuZaikoIoHeader newSyukoHeader = new TrnNyuZaikoIoHeader();
+
+                // TODO 출고데이터와 같은 칼럼 복사
+                newSyukoHeader.ioNo = tensoSyuko.ioNo;
+                newSyukoHeader.ioNoEda = tensoSyuko.ioNoEda;
+                newSyukoHeader.ioNoDiv = String.format("%02d", ioNoDivSeq);
+                newSyukoHeader.busyoKbn = tensoSyuko.busyoKbn;
+                newSyukoHeader.jigyoKbn = tensoSyuko.jigyoKbn;
+                newSyukoHeader.newFlg = tensoSyuko.newFlg;
+                newSyukoHeader.ioKbn = tensoSyuko.ioKbn;
+                newSyukoHeader.idoKbn = tensoSyuko.idoKbn;
+                newSyukoHeader.kakuteiFlg = tensoSyuko.kakuteiFlg;
+                newSyukoHeader.kakuteiNo = tensoSyuko.kakuteiNo;
+                newSyukoHeader.kakuteiDate = tensoSyuko.kakuteiDate;
+                newSyukoHeader.kakuteiTime = tensoSyuko.kakuteiTime;
+                newSyukoHeader.kakuteiUser = tensoSyuko.kakuteiUser;
+                newSyukoHeader.nyukoDate = tensoSyuko.nyukoDate;
+                newSyukoHeader.syukoDate = tensoSyuko.syukoDate;
+                newSyukoHeader.hnmCd = tensoSyuko.hnmCd;
+                newSyukoHeader.brdCd = tensoSyuko.brdCd;
+                newSyukoHeader.qty = tensoSyuko.qty;
+                newSyukoHeader.idoNo = tensoSyuko.idoNo;
+                newSyukoHeader.idoNoEda = tensoSyuko.idoNoEda;
+                newSyukoHeader.exclusiveCnt = 0;
+                newSyukoHeader.insertDate = "20260310"; // TODO currentDate()
+                newSyukoHeader.insertTime = "120000";   // TODO currentTime()
+                newSyukoHeader.insertUser = INSERT_USER;
+
+                // TODO HEADER 등록
+                // insertDataHeader(newSyukoHeader);
+
+                BigDecimal beforeZanQty =
+                        relatedNyuko.zanQty == null ? BigDecimal.ZERO : relatedNyuko.zanQty;
+                BigDecimal calc = beforeZanQty.subtract(nowSyukoQty);
+
+                if (calc.compareTo(BigDecimal.ZERO) >= 0) {
+                    BigDecimal hikiotoshiQty = nowSyukoQty;
+                    relatedNyuko.zanQty = beforeZanQty.subtract(hikiotoshiQty);
+
+                    // TODO HEADER zan_qty 갱신
+                    // updateDataHeaderZanQty(relatedNyuko);
+
+                    // TODO DETAIL 등록
+                    // insertNyukoHikiotoshiDetail(relatedNyuko, newSyukoHeader, tensoPair, hikiotoshiQty);
+                    // insertSyukoHikiotoshiDetail(relatedNyuko, newSyukoHeader, tensoPair, hikiotoshiQty);
+
+                    nowSyukoQty = BigDecimal.ZERO;
+                    completed = true;
+                    break;
+                } else {
+                    BigDecimal hikiotoshiQty = beforeZanQty;
+
+                    relatedNyuko.zanQty = BigDecimal.ZERO;
+
+                    // TODO HEADER zan_qty 갱신
+                    // updateDataHeaderZanQty(relatedNyuko);
+
+                    // TODO DETAIL 등록
+                    // insertNyukoHikiotoshiDetail(relatedNyuko, newSyukoHeader, tensoPair, hikiotoshiQty);
+                    // insertSyukoHikiotoshiDetail(relatedNyuko, newSyukoHeader, tensoPair, hikiotoshiQty);
+
+                    nowSyukoQty = nowSyukoQty.subtract(hikiotoshiQty);
+                    ioNoDivSeq++;
+                    continue;
+                }
+            }
+
+            if (!completed || nowSyukoQty.compareTo(BigDecimal.ZERO) > 0) {
+                throw new Exception("Syuko qty not fully processed. remainQty=" + nowSyukoQty
+                        + ", idoNo=" + tensoSyuko.idoNo
+                        + ", idoNoEda=" + tensoSyuko.idoNoEda);
+            }
+
+            // TODO 필요 시 전송입고측 후처리
+            // use tensoNyuko
+        }
+    }
+}
