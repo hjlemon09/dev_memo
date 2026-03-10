@@ -1,0 +1,64 @@
+package temp.abc.service;
+
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.naming.NamingException;
+
+public class ZaikoIoKariUpdateService {
+
+    // TODO 공통 DAO로 교체
+    // private CommonDao commonDao;
+
+    /**
+     * Headerを基準にKariのKAKUTEI_FLGを'0'に更新
+     */
+    public void updateKariKakuteiFlgByKakuteiNo(String kakuteiNo)
+            throws SQLException, NamingException {
+
+        // ============================================
+        // 1,2,3 を一括で 처리
+        // Header:
+        //   KAKUTEI_NO = parameter
+        //   DELETE_FLG = '0'
+        // Kari:
+        //   HEADER.IO_NO = KARI.IO_NO
+        //   HEADER.IO_NO_EDA = KARI.IO_NO_EDA
+        // 更新:
+        //   KARI.KAKUTEI_FLG = '0'
+        // ============================================
+        StringBuffer sql = new StringBuffer();
+
+        sql.append("UPDATE K ");
+        sql.append("   SET K.KAKUTEI_FLG = '0' ");
+        sql.append("  FROM TRN_NYU_ZAIKO_IO_KARI K ");
+        sql.append(" INNER JOIN TRN_NYU_ZAIKO_IO_HEADER H ");
+        sql.append("         ON H.IO_NO     = K.IO_NO ");
+        sql.append("        AND H.IO_NO_EDA = K.IO_NO_EDA ");
+        sql.append(" WHERE H.KAKUTEI_NO = '").append(kakuteiNo).append("' ");
+        sql.append("   AND H.DELETE_FLG = '0' ");
+
+        // TODO 공통 DAO update 호출
+        // commonDao.updateData(createConditionMap(sql.toString()));
+        executeUpdate(sql.toString());
+    }
+
+    /**
+     * 공통 DAO 조건 Map 예시
+     */
+    private Map createConditionMap(String sql) {
+        Map condition = new HashMap();
+        condition.put("sql", sql);
+        return condition;
+    }
+
+    /**
+     * TODO 실제 공통 DAO 호출로 교체
+     */
+    private void executeUpdate(String sql) throws SQLException, NamingException {
+        // 예:
+        // commonDao.updateData(createConditionMap(sql));
+        System.out.println(sql);
+    }
+}
