@@ -12,32 +12,42 @@ public class ZaikoIoKariUpdateService {
     // private CommonDao commonDao;
 
     /**
-     * Headerを基準にKariのKAKUTEI_FLGを'0'に更新
+     * Headerを基準にKariを更新
+     * 条件:
+     *   H.KAKUTEI_NO = parameter
+     *   H.DELETE_FLG = '0'
+     *   H.IO_NO = K.IO_NO
+     *   H.IO_NO_EDA = K.IO_NO_EDA
+     *   K.DELETE_FLG = '0'
+     *
+     * 更新:
+     *   K.KAKUTEI_FLG = '0'
+     *   K.EXCLUSIVE_CNT = K.EXCLUSIVE_CNT + 1
+     *   K.UPDATE_DATE = parameter
+     *   K.UPDATE_TIME = parameter
+     *   K.UPDATE_USER = parameter
      */
-    public void updateKariKakuteiFlgByKakuteiNo(String kakuteiNo)
+    public void updateKariByKakuteiNo(String kakuteiNo,
+                                      String updateDate,
+                                      String updateTime,
+                                      String updateUser)
             throws SQLException, NamingException {
 
-        // ============================================
-        // 1,2,3 を一括で 처리
-        // Header:
-        //   KAKUTEI_NO = parameter
-        //   DELETE_FLG = '0'
-        // Kari:
-        //   HEADER.IO_NO = KARI.IO_NO
-        //   HEADER.IO_NO_EDA = KARI.IO_NO_EDA
-        // 更新:
-        //   KARI.KAKUTEI_FLG = '0'
-        // ============================================
         StringBuffer sql = new StringBuffer();
 
         sql.append("UPDATE K ");
-        sql.append("   SET K.KAKUTEI_FLG = '0' ");
+        sql.append("   SET K.KAKUTEI_FLG  = '0' ");
+        sql.append("      ,K.EXCLUSIVE_CNT = ISNULL(K.EXCLUSIVE_CNT, 0) + 1 ");
+        sql.append("      ,K.UPDATE_DATE   = '").append(updateDate).append("' ");
+        sql.append("      ,K.UPDATE_TIME   = '").append(updateTime).append("' ");
+        sql.append("      ,K.UPDATE_USER   = '").append(updateUser).append("' ");
         sql.append("  FROM TRN_NYU_ZAIKO_IO_KARI K ");
         sql.append(" INNER JOIN TRN_NYU_ZAIKO_IO_HEADER H ");
         sql.append("         ON H.IO_NO     = K.IO_NO ");
         sql.append("        AND H.IO_NO_EDA = K.IO_NO_EDA ");
         sql.append(" WHERE H.KAKUTEI_NO = '").append(kakuteiNo).append("' ");
         sql.append("   AND H.DELETE_FLG = '0' ");
+        sql.append("   AND K.DELETE_FLG = '0' ");
 
         // TODO 공통 DAO update 호출
         // commonDao.updateData(createConditionMap(sql.toString()));
