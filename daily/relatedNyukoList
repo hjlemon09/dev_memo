@@ -1,0 +1,31 @@
+StringBuffer sql = new StringBuffer();
+
+sql.append("SELECT ");
+sql.append(" H.IO_NO ");
+sql.append(",H.IO_NO_EDA ");
+sql.append(",H.IO_NO_DIV ");
+sql.append(",H.JIGYO_KBN ");
+sql.append(",H.HNM_CD ");
+sql.append(",H.BRD_CD ");
+sql.append(",H.NYUKO_DATE ");
+sql.append(",H.QTY ");
+sql.append(",H.ZAN_QTY ");
+sql.append("FROM TRN_NYU_ZAIKO_IO_HEADER H ");
+sql.append("WHERE 1=1 ");
+
+sql.append("AND H.JIGYO_KBN = '").append(tensoSyuko.get("JIGYO_KBN")).append("' ");
+sql.append("AND H.HNM_CD = '").append(tensoSyuko.get("HNM_CD")).append("' ");
+sql.append("AND H.BRD_CD = '").append(tensoSyuko.get("BRD_CD")).append("' ");
+
+sql.append("AND H.NYUKO_DATE <= '").append(tensoSyuko.get("SYUKO_DATE")).append("' ");
+
+sql.append("AND H.ZAN_QTY <> 0 ");
+
+sql.append("AND H.IO_KBN = '1' ");
+sql.append("AND H.NEW_FLG = '1' ");
+sql.append("AND H.DELETE_FLG = '0' ");
+
+sql.append("ORDER BY ");
+sql.append(" H.NYUKO_DATE ASC ");
+sql.append(",H.IO_NO ASC ");
+sql.append(",H.IO_NO_EDA ASC ");
