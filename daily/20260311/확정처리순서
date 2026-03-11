@@ -1,0 +1,196 @@
+네.
+이 경우는 1(입고), 2(전송), 3(출고)를 UNION ALL로 하나로 합치고,
+전송은 출고(out) + 입고(in)를 같은 ido_no, ido_no_eda로 1행에 묶어서 가져오면 됩니다.
+
+아래 SQL은 정렬까지 포함하고 있고, Java에서 결과를 한 줄씩 읽으면서
+	•	PROC_KBN = '1' → 입고 확정처리
+	•	PROC_KBN = '2' → 전송 확정처리
+	•	PROC_KBN = '3' → 출고 확정처리
+
+로 분기하면 됩니다.
+
+전제는 날짜 컬럼이 YYYYMMDD 문자열이라고 보고 SUBSTRING(...,1,6) 를 사용했습니다.
+
+StringBuffer sql = new StringBuffer();
+
+sql.append("SELECT ");
+sql.append("    T.PROC_KBN, ");
+sql.append("    T.BASE_DATE, ");
+sql.append("    T.SORT_IO_NO, ");
+sql.append("    T.SORT_IO_NO_EDA, ");
+sql.append("    T.IO_NO, ");
+sql.append("    T.IO_NO_EDA, ");
+sql.append("    T.IDO_NO, ");
+sql.append("    T.IDO_NO_EDA, ");
+sql.append("    T.NYUKO_DATE, ");
+sql.append("    T.SYUKO_DATE, ");
+sql.append("    T.OUT_IO_NO, ");
+sql.append("    T.OUT_IO_NO_EDA, ");
+sql.append("    T.OUT_SYUKO_DATE, ");
+sql.append("    T.IN_IO_NO, ");
+sql.append("    T.IN_IO_NO_EDA, ");
+sql.append("    T.IN_NYUKO_DATE ");
+sql.append("FROM ( ");
+
+sql.append("    SELECT ");
+sql.append("        '1' AS PROC_KBN, ");
+sql.append("        K1.NYUKO_DATE AS BASE_DATE, ");
+sql.append("        K1.IO_NO AS SORT_IO_NO, ");
+sql.append("        K1.IO_NO_EDA AS SORT_IO_NO_EDA, ");
+sql.append("        K1.IO_NO AS IO_NO, ");
+sql.append("        K1.IO_NO_EDA AS IO_NO_EDA, ");
+sql.append("        K1.IDO_NO AS IDO_NO, ");
+sql.append("        K1.IDO_NO_EDA AS IDO_NO_EDA, ");
+sql.append("        K1.NYUKO_DATE AS NYUKO_DATE, ");
+sql.append("        K1.SYUKO_DATE AS SYUKO_DATE, ");
+sql.append("        NULL AS OUT_IO_NO, ");
+sql.append("        NULL AS OUT_IO_NO_EDA, ");
+sql.append("        NULL AS OUT_SYUKO_DATE, ");
+sql.append("        NULL AS IN_IO_NO, ");
+sql.append("        NULL AS IN_IO_NO_EDA, ");
+sql.append("        NULL AS IN_NYUKO_DATE ");
+sql.append("    FROM TRN_NYU_ZAIKO_IO_KARI K1 ");
+sql.append("    WHERE K1.NEW_FLG = '1' ");
+sql.append("      AND K1.KAKUTEI_FLG = '0' ");
+sql.append("      AND K1.IO_KBN = '1' ");
+sql.append("      AND K1.IDO_KBN = '0' ");
+sql.append("      AND SUBSTRING(K1.NYUKO_DATE, 1, 6) = ? ");
+
+sql.append("    UNION ALL ");
+
+sql.append("    SELECT ");
+sql.append("        '2' AS PROC_KBN, ");
+sql.append("        K2O.SYUKO_DATE AS BASE_DATE, ");
+sql.append("        K2O.IO_NO AS SORT_IO_NO, ");
+sql.append("        K2O.IO_NO_EDA AS SORT_IO_NO_EDA, ");
+sql.append("        NULL AS IO_NO, ");
+sql.append("        NULL AS IO_NO_EDA, ");
+sql.append("        K2O.IDO_NO AS IDO_NO, ");
+sql.append("        K2O.IDO_NO_EDA AS IDO_NO_EDA, ");
+sql.append("        NULL AS NYUKO_DATE, ");
+sql.append("        NULL AS SYUKO_DATE, ");
+sql.append("        K2O.IO_NO AS OUT_IO_NO, ");
+sql.append("        K2O.IO_NO_EDA AS OUT_IO_NO_EDA, ");
+sql.append("        K2O.SYUKO_DATE AS OUT_SYUKO_DATE, ");
+sql.append("        K2I.IO_NO AS IN_IO_NO, ");
+sql.append("        K2I.IO_NO_EDA AS IN_IO_NO_EDA, ");
+sql.append("        K2I.NYUKO_DATE AS IN_NYUKO_DATE ");
+sql.append("    FROM TRN_NYU_ZAIKO_IO_KARI K2O ");
+sql.append("    INNER JOIN TRN_NYU_ZAIKO_IO_KARI K2I ");
+sql.append("       ON K2I.IDO_NO = K2O.IDO_NO ");
+sql.append("      AND K2I.IDO_NO_EDA = K2O.IDO_NO_EDA ");
+sql.append("      AND K2I.NEW_FLG = '1' ");
+sql.append("      AND K2I.KAKUTEI_FLG = '0' ");
+sql.append("      AND K2I.IO_KBN = '1' ");
+sql.append("      AND K2I.IDO_KBN <> '0' ");
+sql.append("      AND SUBSTRING(K2I.NYUKO_DATE, 1, 6) = ? ");
+sql.append("    WHERE K2O.NEW_FLG = '1' ");
+sql.append("      AND K2O.KAKUTEI_FLG = '0' ");
+sql.append("      AND K2O.IO_KBN = '2' ");
+sql.append("      AND K2O.IDO_KBN <> '0' ");
+sql.append("      AND SUBSTRING(K2O.SYUKO_DATE, 1, 6) = ? ");
+
+sql.append("    UNION ALL ");
+
+sql.append("    SELECT ");
+sql.append("        '3' AS PROC_KBN, ");
+sql.append("        K3.SYUKO_DATE AS BASE_DATE, ");
+sql.append("        K3.IO_NO AS SORT_IO_NO, ");
+sql.append("        K3.IO_NO_EDA AS SORT_IO_NO_EDA, ");
+sql.append("        K3.IO_NO AS IO_NO, ");
+sql.append("        K3.IO_NO_EDA AS IO_NO_EDA, ");
+sql.append("        K3.IDO_NO AS IDO_NO, ");
+sql.append("        K3.IDO_NO_EDA AS IDO_NO_EDA, ");
+sql.append("        K3.NYUKO_DATE AS NYUKO_DATE, ");
+sql.append("        K3.SYUKO_DATE AS SYUKO_DATE, ");
+sql.append("        NULL AS OUT_IO_NO, ");
+sql.append("        NULL AS OUT_IO_NO_EDA, ");
+sql.append("        NULL AS OUT_SYUKO_DATE, ");
+sql.append("        NULL AS IN_IO_NO, ");
+sql.append("        NULL AS IN_IO_NO_EDA, ");
+sql.append("        NULL AS IN_NYUKO_DATE ");
+sql.append("    FROM TRN_NYU_ZAIKO_IO_KARI K3 ");
+sql.append("    WHERE K3.NEW_FLG = '1' ");
+sql.append("      AND K3.KAKUTEI_FLG = '0' ");
+sql.append("      AND K3.IO_KBN = '2' ");
+sql.append("      AND K3.IDO_KBN = '0' ");
+sql.append("      AND SUBSTRING(K3.SYUKO_DATE, 1, 6) = ? ");
+
+sql.append(") T ");
+sql.append("ORDER BY ");
+sql.append("    T.BASE_DATE ASC, ");
+sql.append("    T.PROC_KBN ASC, ");
+sql.append("    T.SORT_IO_NO ASC, ");
+sql.append("    T.SORT_IO_NO_EDA ASC ");
+
+파라미터는 순서대로 이렇게 넣으면 됩니다.
+
+ps.setString(1, targetYm); // 1(입고)
+ps.setString(2, targetYm); // 2-입고
+ps.setString(3, targetYm); // 2-출고
+ps.setString(4, targetYm); // 3(출고)
+
+
+⸻
+
+이 SQL의 의미
+
+정렬 기준은 정확히 아래로 맞춰져 있습니다.
+	•	BASE_DATE ASC
+	•	PROC_KBN ASC
+	•	'1' 입고
+	•	'2' 전송
+	•	'3' 출고
+	•	SORT_IO_NO ASC
+	•	SORT_IO_NO_EDA ASC
+
+즉 같은 날짜 안에서는
+	•	입고
+	•	전송
+	•	출고
+
+순서가 되고, 각각 안에서는 io_no, io_no_eda 순이 됩니다.
+
+⸻
+
+Java에서의 사용 이미지
+
+결과를 한 줄씩 읽으면서 대략 이렇게 처리하면 됩니다.
+
+String procKbn = rs.getString("PROC_KBN");
+
+if ("1".equals(procKbn)) {
+    // IO_NO, IO_NO_EDA 사용해서 입고 확정처리
+} else if ("2".equals(procKbn)) {
+    // OUT_IO_NO / OUT_IO_NO_EDA
+    // IN_IO_NO  / IN_IO_NO_EDA
+    // 둘을 세트로 전송 확정처리
+} else if ("3".equals(procKbn)) {
+    // IO_NO, IO_NO_EDA 사용해서 출고 확정처리
+}
+
+
+⸻
+
+중요한 보충
+
+위 SQL은 전송 페어가 정상적으로 1:1 존재한다는 전제로 INNER JOIN 을 썼습니다.
+
+즉,
+	•	전송출고는 있는데 전송입고가 없는 이상 데이터
+	•	같은 ido_no, ido_no_eda 로 전송입고가 2건 이상인 이상 데이터
+
+가 있으면 결과가 예상과 달라질 수 있습니다.
+
+업무상 정말 “반드시 1:1” 이 보장된다면 이 SQL로 충분합니다.
+
+⸻
+
+더 안전하게 하고 싶으면
+
+원하시면 다음 답변에서 이어서 바로
+	1.	전송 페어 이상데이터 검출 SQL
+	2.	위 SQL을 DAO 메서드 형태로 감싼 Java 코드
+	3.	ResultSet 읽어서 1/2/3 처리 분기하는 for문 예시
+
+까지 붙여드릴게요.
